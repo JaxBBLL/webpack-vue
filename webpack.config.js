@@ -1,91 +1,48 @@
 const path = require('path')
-const webpack = require('webpack')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
-const { CleanWebpackPlugin } = require('clean-webpack-plugin')
-const UglifyJsPlugin = require('uglifyjs-webpack-plugin')
-const VueLoaderPlugin = require('vue-loader/lib/plugin')
-const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 const CopyWebpackPlugin = require('copy-webpack-plugin')
-const OptimizeCssAssetsPlugin = require('optimize-css-assets-webpack-plugin')
+const MiniCssExtractPlugin = require('mini-css-extract-plugin')
+const { CleanWebpackPlugin } = require('clean-webpack-plugin')
+const CssMinimizerPlugin = require('css-minimizer-webpack-plugin')
+const TerserPlugin = require('terser-webpack-plugin')
+const { VueLoaderPlugin } = require('vue-loader')
 
 const config = {
   port: 8010,
   proxyServer: '',
   devPublicPath: '',
-  buildPublicPath: ''
+  buildPublicPath: '',
 }
 
 function resolve(dir) {
   return path.resolve(__dirname, dir)
 }
 
-const devPlugins = [
-  new webpack.HotModuleReplacementPlugin(),
-  new HtmlWebpackPlugin({
-    filename: resolve('dist/index.html'),
-    template: 'index.html'
-  })
-]
-
-const buildPlugins = [
-  new CleanWebpackPlugin(),
-  new CopyWebpackPlugin([
-    {
-      from: resolve('static'),
-      to: resolve('dist/static')
-    }
-  ]),
-  new HtmlWebpackPlugin({
-    minify: {
-      collapseWhitespace: true,
-      removeComments: true,
-      removeRedundantAttributes: true,
-      removeScriptTypeAttributes: true,
-      removeStyleLinkTypeAttributes: true,
-      useShortDoctype: true
-    },
-    filename: resolve('dist/index.html'),
-    template: 'index.html'
-  }),
-  new MiniCssExtractPlugin({
-    filename: 'css/[name].[contenthash:5].css',
-    chunkFilename: 'css/[name].[contenthash:5].css'
-  }),
-  new OptimizeCssAssetsPlugin({
-    assetNameRegExp: /\.css$/g,
-    cssProcessor: require('cssnano'),
-    cssProcessorPluginOptions: {
-      preset: ['default', { discardComments: { removeAll: true } }]
-    },
-    canPrint: true
-  })
-]
-
-module.exports = function(env) {
-  const isDev = env === 'development'
+module.exports = function (env) {
+  const isDev = !!env.development
   const publicPath = isDev ? config.devPublicPath : config.buildPublicPath
   const webpackConfig = {
     mode: isDev ? 'development' : 'production',
     entry: {
-      index: './src/main.js'
+      main: resolve('./src/main.js'),
     },
     output: {
-      path: resolve('dist'),
-      filename: isDev ? '[name].js' : 'js/[name].[contenthash:5].js',
-      chunkFilename: isDev ? '[name].js' : 'js/[name].[contenthash:5].js',
-      publicPath: publicPath
+      path: resolve('./dist'),
+      filename: '[name].js',
+      assetModuleFilename: '[name][ext][query]',
+      publicPath,
     },
     resolve: {
       extensions: ['.vue', '.js'],
       alias: {
         '@': resolve('src'),
-        '@views': resolve('src/views'),
-        '@api': resolve('src/api'),
-        '@utils': resolve('src/utils'),
-        '@common': resolve('src/common'),
-        '@style': resolve('src/style'),
-        '@images': resolve('src/images')
-      }
+        '@views': resolve('./src/views'),
+        '@api': resolve('./src/api'),
+        '@utils': resolve('./src/utils'),
+        '@common': resolve('./src/common'),
+        '@styles': resolve('./src/styles'),
+        '@images': resolve('./src/images'),
+      },
     },
     module: {
       rules: [
@@ -93,12 +50,12 @@ module.exports = function(env) {
           enforce: 'pre',
           test: /\.(js|vue)$/,
           use: 'eslint-loader',
-          exclude: /node_modules/
+          exclude: /node_modules/,
         },
         {
           test: /\.js$/,
           use: 'babel-loader',
-          exclude: file => /node_modules/.test(file) && !/\.vue\.js/.test(file)
+          exclude: (file) => /node_modules/.test(file) && !/\.vue\.js/.test(file),
         },
         {
           test: /\.vue$/,
@@ -111,11 +68,11 @@ module.exports = function(env) {
                   source: 'src',
                   img: 'src',
                   image: ['xlink:href', 'href'],
-                  use: ['xlink:href', 'href']
-                }
-              }
-            }
-          ]
+                  use: ['xlink:href', 'href'],
+                },
+              },
+            },
+          ],
         },
         {
           test: /\.css$/,
@@ -123,52 +80,66 @@ module.exports = function(env) {
             isDev ? 'vue-style-loader' : MiniCssExtractPlugin.loader,
             {
               loader: 'css-loader',
-              options: { importLoaders: 1 }
-            },
-            'postcss-loader'
-          ]
-        },
-        {
-          test: /\.less$/,
-          use: [
-            isDev ? 'vue-style-loader' : MiniCssExtractPlugin.loader,
-            {
-              loader: 'css-loader',
-              options: { importLoaders: 2 }
+              options: { importLoaders: 1 },
             },
             'postcss-loader',
-            {
-              loader: 'less-loader',
-              options: {}
-            }
-          ]
+          ],
         },
         {
           test: /\.(png|jpe?g|gif|svg|woff2?|eot|ttf|otf)(\?.*)?$/i,
-          use: {
-            loader: 'url-loader',
-            options: {
-              esModule: false,
-              limit: 8192,
-              // [path][name].[ext] path是绝对路径
-              name: isDev ? '[path][name].[ext]' : 'assets/[name]-[hash:5].[ext]',
-              publicPath: publicPath,
-              outputPath: ''
-            }
-          }
-        }
-      ]
+          type: 'asset/resource',
+        },
+      ],
     },
     plugins: [
-      new webpack.DefinePlugin({
-        'process.env.NODE_ENV': JSON.stringify(env)
+      new HtmlWebpackPlugin({
+        filename: 'index.html',
+        template: 'src/index.html',
+        minify: isDev
+          ? false
+          : {
+              collapseWhitespace: true,
+              keepClosingSlash: true,
+              removeComments: true,
+              removeRedundantAttributes: true,
+              removeScriptTypeAttributes: true,
+              removeStyleLinkTypeAttributes: true,
+              useShortDoctype: true,
+            },
       }),
-      new VueLoaderPlugin()
-    ].concat(isDev ? devPlugins : buildPlugins),
-    devtool: isDev ? 'cheap-module-eval-source-map' : 'none',
+      new VueLoaderPlugin(),
+    ].concat(
+      isDev
+        ? []
+        : [
+            new CleanWebpackPlugin(),
+            new CopyWebpackPlugin({
+              patterns: [
+                {
+                  from: resolve('public'),
+                  to: resolve('dist'),
+                },
+              ],
+            }),
+            new MiniCssExtractPlugin({
+              filename: '[name].css',
+              chunkFilename: '[name].css',
+            }),
+            new MiniCssExtractPlugin(),
+          ]
+    ),
+    optimization: {
+      splitChunks: {
+        chunks: 'all',
+      },
+    },
     devServer: {
-      overlay: true,
-      contentBase: './',
+      client: {
+        overlay: true,
+      },
+      static: {
+        directory: resolve(__dirname, 'public'),
+      },
       open: true,
       port: config.port,
       hot: true,
@@ -179,39 +150,16 @@ module.exports = function(env) {
           target: config.proxyServer,
           changeOrigin: true,
           pathRewrite: {
-            '^/proxyApi': '/'
-          }
-        }
+            '^/proxyApi': '/',
+          },
+        },
       },
-      stats: 'minimal' // 只在发生错误或有新的编译时输出
-    }
+    },
+    devtool: isDev ? 'inline-source-map' : false,
   }
-
   if (!isDev) {
     webpackConfig.optimization = {
-      usedExports: true, // 开启Tree Shaking
-      sideEffects: true, // 副作用
-      minimizer: [
-        new UglifyJsPlugin({
-          cache: true,
-          parallel: true,
-          sourceMap: true,
-          uglifyOptions: {
-            warnings: false,
-            compress: {
-              drop_console: true,
-              drop_debugger: true,
-              pure_funcs: ['console.log']
-            }
-          }
-        })
-      ],
-      splitChunks: {
-        chunks: 'all'
-      },
-      runtimeChunk: {
-        name: 'manifest'
-      }
+      minimizer: [new CssMinimizerPlugin(), new TerserPlugin()],
     }
   }
   return webpackConfig

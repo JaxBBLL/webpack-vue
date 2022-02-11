@@ -1,39 +1,27 @@
 <template>
-  <div class="app">
-    <Hello />
-    <div class="content">
-      <img src="./pic.jpg" height="60" />
-      <ul>
-        <li v-for="item in list" :key="item">{{ item }}</li>
-      </ul>
-    </div>
+  <div class="container">
+    <h1 class="title">{{ msg }}</h1>
+    <img class="img" @click="clickHandle" src="~@images/1.jpg" width="200" />
   </div>
 </template>
-<script>
-import Hello from "./Hello";
-export default {
-  name: "App",
-  components: {
-    Hello
-  },
-  data() {
-    return {
-      list: ["Jack", "Peter"]
-    };
-  }
-};
-</script>
-<style lang="less">
-.app {
-  width: 80%;
-  border: 1px solid #ddd;
-  margin: 20px auto;
-  padding: 15px;
-  box-shadow: 2px 2px 5px #ddd;
-}
 
-.content {
-  display: flex;
-  align-items: center;
+<script setup>
+import { ref } from 'vue'
+const msg = ref('App home')
+const clickHandle = (e) => {
+  msg.value = 'Hello World'
+}
+</script>
+
+<style scoped>
+.container {
+  width: 1200px;
+  margin: 0 auto;
+  .title {
+    color: var(--primary-color);
+  }
+  .img {
+    border-radius: 0.25rem;
+  }
 }
 </style>

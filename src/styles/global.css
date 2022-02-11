@@ -1,0 +1,96 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-size: 14px;
+}
+
+svg,
+img {
+  display: inline;
+}
+
+:root {
+  --pixel-border-dpr: 1;
+  --primary-color: #b500cc;
+}
+
+@media screen and (-webkit-min-device-pixel-ratio: 2), (min-resolution: 2dppx) {
+  :root {
+    --pixel-border-dpr: 2;
+  }
+}
+
+@media screen and (-webkit-min-device-pixel-ratio: 3), (min-resolution: 3dppx) {
+  :root {
+    --pixel-border-dpr: 3;
+  }
+}
+
+@media screen and (-webkit-min-device-pixel-ratio: 4), (min-resolution: 4dppx) {
+  :root {
+    --pixel-border-dpr: 4;
+  }
+}
+
+/* 移动端1px边框  */
+[pixel-border],
+[pixel-border="true"] {
+  position: relative;
+  border-width: 0;
+  box-sizing: border-box;
+}
+
+[pixel-border]::before,
+[pixel-border="true"]::before {
+  --scale: calc(1 / var(--pixel-border-dpr));
+  --size: calc(var(--pixel-border-dpr) * 100%);
+  content: "";
+  pointer-events: none;
+  display: block;
+  box-sizing: inherit;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: var(--size);
+  height: var(--size);
+  border: inherit;
+  border-width: 1px;
+  border-image: inherit;
+  border-radius: inherit;
+  transform: translate(-50%, -50%) scale(var(--scale), var(--scale));
+}
+
+.text-overflow {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.line-overflow {
+  &-2 {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    word-break: break-all;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+  &-3 {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    word-break: break-all;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+  }
+  &-4 {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    word-break: break-all;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 4;
+  }
+}
