@@ -116,8 +116,8 @@ module.exports = function (env) {
             new CopyWebpackPlugin({
               patterns: [
                 {
-                  from: resolve('public'),
-                  to: resolve('dist'),
+                  from: resolve('static'),
+                  to: resolve('dist/static'),
                 },
               ],
             }),
@@ -129,6 +129,20 @@ module.exports = function (env) {
           ]
     ),
     optimization: {
+      minimizer: isDev
+        ? []
+        : [
+            new CssMinimizerPlugin(),
+            new TerserPlugin({
+              terserOptions: {
+                compress: {
+                  drop_console: true,
+                  drop_debugger: true,
+                  pure_funcs: ['console.log', 'console.error'],
+                },
+              },
+            }),
+          ],
       splitChunks: {
         chunks: 'all',
       },
@@ -138,12 +152,11 @@ module.exports = function (env) {
         overlay: true,
       },
       static: {
-        directory: resolve(__dirname, 'public'),
+        directory: resolve(__dirname, 'static'),
       },
       open: true,
       port: config.port,
       hot: true,
-      // 在使用单页面应用的时候，需要设置此参数，代表如果访问除根路径以外的地址，最终都会转向去请求根路径。
       historyApiFallback: true,
       proxy: {
         '/proxyApi': {
@@ -156,11 +169,6 @@ module.exports = function (env) {
       },
     },
     devtool: isDev ? 'inline-source-map' : false,
-  }
-  if (!isDev) {
-    webpackConfig.optimization = {
-      minimizer: [new CssMinimizerPlugin(), new TerserPlugin()],
-    }
   }
   return webpackConfig
 }
