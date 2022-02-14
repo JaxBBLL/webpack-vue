@@ -36,17 +36,17 @@ img {
 
 /* 移动端1px边框  */
 [pixel-border],
-[pixel-border="true"] {
+[pixel-border='true'] {
   position: relative;
   border-width: 0;
   box-sizing: border-box;
 }
 
 [pixel-border]::before,
-[pixel-border="true"]::before {
+[pixel-border='true']::before {
   --scale: calc(1 / var(--pixel-border-dpr));
   --size: calc(var(--pixel-border-dpr) * 100%);
-  content: "";
+  content: '';
   pointer-events: none;
   display: block;
   box-sizing: inherit;

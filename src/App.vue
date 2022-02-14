@@ -6,11 +6,11 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
-const msg = ref('App home')
+import { ref } from 'vue';
+const msg = ref('App home');
 const clickHandle = (e) => {
-  msg.value = 'Hello World'
-}
+  msg.value = 'Hello World';
+};
 </script>
 
 <style scoped>
